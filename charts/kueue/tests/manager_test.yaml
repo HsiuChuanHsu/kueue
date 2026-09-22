@@ -178,3 +178,63 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].args
           content: "--zap-log-level=5"
+  - it: should render only the two default args, without the feature gates flag
+    template: manager/manager.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value:
+            - --config=/controller_manager_config.yaml
+            - --zap-log-level=2
+  - it: should enable the alpha feature gates when enableAlphaAPIs is true
+    template: manager/manager.yaml
+    set:
+      enableAlphaAPIs: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--feature-gates=DynamicQuotaOrchestration=true"
+  - it: should let an explicit feature gate override the one enabled by enableAlphaAPIs
+    template: manager/manager.yaml
+    set:
+      enableAlphaAPIs: true
+      controllerManager:
+        featureGates:
+          - name: DynamicQuotaOrchestration
+            enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--feature-gates=DynamicQuotaOrchestration=false"
+  - it: should render only the configured feature gates when enableAlphaAPIs is false
+    template: manager/manager.yaml
+    set:
+      controllerManager:
+        featureGates:
+          - name: PartialAdmission
+            enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--feature-gates=PartialAdmission=true"
+  - it: should append the configured feature gates after the alpha ones
+    template: manager/manager.yaml
+    set:
+      enableAlphaAPIs: true
+      controllerManager:
+        featureGates:
+          - name: PartialAdmission
+            enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: "--feature-gates=DynamicQuotaOrchestration=true,PartialAdmission=true"
+  - it: should fail when a configured feature gate has no name
+    template: manager/manager.yaml
+    set:
+      controllerManager:
+        featureGates:
+          - enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: each controllerManager.featureGates entry needs a name

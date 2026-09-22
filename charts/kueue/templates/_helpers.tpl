@@ -111,16 +111,41 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+AlphaFeatureGates - comma-separated feature gates guarding the controllers for the
+alpha APIs installed by .Values.enableAlphaAPIs. Extend this when a new alpha API
+ships with its own gate. CapacityProvider has no gate of its own; it is reconciled
+by the DynamicQuotaOrchestrator controller.
+*/}}
+{{- define "kueue.alphaFeatureGates" -}}
+DynamicQuotaOrchestration
+{{- end }}
+
+{{/*
 FeatureGates
+
+The gates listed in kueue.alphaFeatureGates are enabled when .Values.enableAlphaAPIs
+is set, so that installing the alpha CRDs also starts the controllers that reconcile
+them. An explicit entry in .Values.controllerManager.featureGates always wins, which
+keeps it possible to install the CRDs without enabling their controllers.
 */}}
 {{- define "kueue.featureGates" -}}
-{{- $features := "" }}
+{{- $overridden := dict }}
 {{- range .Values.controllerManager.featureGates }}
-{{- $str := printf "%s=%t," .name .enabled }}
-{{- $features = print $features $str }}
+{{- $_ := set $overridden (required "each controllerManager.featureGates entry needs a name" .name) true }}
 {{- end }}
-{{- with .Values.controllerManager.featureGates }}
-- --feature-gates={{ $features | trimSuffix "," }}
+{{- $features := list }}
+{{- if .Values.enableAlphaAPIs }}
+{{- range splitList "," (include "kueue.alphaFeatureGates" .) }}
+{{- if not (hasKey $overridden .) }}
+{{- $features = append $features (printf "%s=true" .) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- range .Values.controllerManager.featureGates }}
+{{- $features = append $features (printf "%s=%t" .name .enabled) }}
+{{- end }}
+{{- if $features }}
+- --feature-gates={{ join "," $features }}
 {{- end }}
 {{- end }}
 

@@ -114,7 +114,7 @@ The following table lists the configurable parameters of the kueue chart and the
 | certManager.issuerRef | object | `{}` | Override the default self-signed cert-manager issuer reference. When set, the chart skips creating its own Issuer and uses this reference for webhook, metrics, and visibility certificates. The referenced issuer must provide the CA data required by Kueue's cert-manager integration. |
 | controllerManager.affinity | object | `{}` | ControllerManager's affinity |
 | controllerManager.dnsPolicy | string | `""` | ControllerManager pod's dnsPolicy. Set to ClusterFirstWithHostNet when hostNetwork is enabled. |
-| controllerManager.featureGates | list | `[]` | ControllerManager's feature gates |
+| controllerManager.featureGates | list | `[]` | ControllerManager's feature gates. An entry here takes precedence over the gates enabled by enableAlphaAPIs. |
 | controllerManager.hostNetwork | bool | `false` | Run the ControllerManager pod on the host network. Needed where the API server reaches the webhook/visibility endpoints via node IPs rather than pod IPs. |
 | controllerManager.imagePullSecrets | list | `[]` | ControllerManager's imagePullSecrets |
 | controllerManager.livenessProbe.failureThreshold | int | `3` | ControllerManager's livenessProbe failureThreshold |
@@ -143,7 +143,7 @@ The following table lists the configurable parameters of the kueue chart and the
 | controllerManager.strategy | object | `{}` | ControllerManager Deployment's update strategy. When hostNetwork is enabled the manager's ports bind to the node, so the default RollingUpdate surge cannot schedule a second pod onto an already-occupied node; set maxSurge: 0 to roll in place. |
 | controllerManager.tolerations | list | `[]` | ControllerManager's tolerations |
 | controllerManager.topologySpreadConstraints | list | `[]` | ControllerManager's topologySpreadConstraints |
-| enableAlphaAPIs | bool | `false` | Enable Alpha APIs (e.g. DynamicQuotaOrchestrator, CapacityProvider) |
+| enableAlphaAPIs | bool | `false` | Enable the Alpha APIs (e.g. DynamicQuotaOrchestrator, CapacityProvider). This installs their CRDs and enables the feature gates guarding the controllers that reconcile them. Set the gate explicitly in controllerManager.featureGates to install the CRDs without starting their controllers. |
 | enableCertManager | bool | `false` | Enable x509 automated certificate management using cert-manager (cert-manager.io) |
 | enableKueueViz | bool | `false` | Enable KueueViz dashboard |
 | enableMutatingAdmissionPolicy | bool | `false` | Enable MutatingAdmissionPolicy for clearing nominatedClusterNames on admission or eviction (requires K8s 1.36+) |

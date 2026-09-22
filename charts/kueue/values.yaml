@@ -25,12 +25,12 @@ enableMutatingAdmissionPolicy: false
 enableVisibilityAuthReaderRoleBinding: true
 # -- Enable KueueViz dashboard
 enableKueueViz: false
-# -- Enable Alpha APIs (e.g. DynamicQuotaOrchestrator, CapacityProvider)
+# -- Enable the Alpha APIs (e.g. DynamicQuotaOrchestrator, CapacityProvider). This installs their CRDs and enables the feature gates guarding the controllers that reconcile them. Set the gate explicitly in controllerManager.featureGates to install the CRDs without starting their controllers.
 enableAlphaAPIs: false
 # -- Kubernetes cluster's domain
 kubernetesClusterDomain: cluster.local
 controllerManager:
-  # -- ControllerManager's feature gates
+  # -- ControllerManager's feature gates. An entry here takes precedence over the gates enabled by enableAlphaAPIs.
   featureGates: []
   #  - name: PartialAdmission
   #    enabled: true
